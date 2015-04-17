@@ -1,8 +1,8 @@
 #include <hidef.h>      /* common defines and macros */
 #include <mc9s12dt256.h>     /* derivative information */
 
-#include "pbs12dslk.h"
-#include "lcd.h"
+//#include "pbs12dslk.h"
+//#include "lcd.h"
 
 #pragma LINK_INFO DERIVATIVE "mc9s12dt256"
 
@@ -21,17 +21,23 @@ void wait_local(unsigned int n);
 
 #define KEYPAD_MAXBUFFER 50
 
-void keypad_process();
-char keypad_get();
-char keypad_scan();
-void keypad_wait();
+void keypad_process(void);
+char keypad_get(void);
+char keypad_scan(void);
+void keypad_wait(void);
 
-enum KeypadStatus {
-	KEYPAD_OFF,
-	KEYPAD_ON
-	}
 
-KeypadStatus keypad_status = KEYPAD_OFF;
+#define KEYPAD_ON 1
+#define KEYPAD_OFF 0
+#define TRUE 1
+#define FALSE 0
+//enum KeypadStatus {
+//	KEYPAD_OFF,
+//	KEYPAD_ON
+//	}
+//
+//KeypadStatus keypad_status = KEYPAD_OFF;
+char keypad_status;
 char keypad_buffer[KEYPAD_MAXBUFFER];
 
 
@@ -75,15 +81,15 @@ PPST = 0x00;
 
 EnableInterrupts;
 
-LCDInit();
-LCDClearDisplay();
+//LCDInit(void);
+//LCDClearDisplay(void);
 
 
-
+keypad_status = KEYPAD_OFF;
 
 while (1) {
 	if (keypad_status == KEYPAD_ON) {
-		keypad_process;
+		keypad_process();
 		keypad_status = KEYPAD_OFF;
 		}
 
@@ -107,9 +113,9 @@ if (PIFP & MASK_ON) {
 
 
 
-void keypad_process()
+void keypad_process(void)
 {
-char c;
+char key;
 unsigned char x;
 
 DDRP = 0x00;
@@ -130,7 +136,7 @@ while (1) {
 
 //		if (keypad_mode == ?) 	could be added
 
-		keypad_buffer[x] = c;
+		keypad_buffer[x] = key;
 		x++;
 		if (x >= KEYPAD_MAXBUFFER) {
 			keypad_buffer[0] = 0; // could be KEYPAD_MAXBUFFER
@@ -148,9 +154,9 @@ return;
 
 
 
-char keypad_get()
+char keypad_get(void)
 {
-char key
+char key;
 
 key = 0;
 while ((key == 0) && (keypad_status == KEYPAD_ON)) {
@@ -162,14 +168,14 @@ return key;
 
 
 
-char keypad_scan()
+char keypad_scan(void)
 {
 unsigned char row, column;
 unsigned char hit;
-char key
+char key;
 
 key = 0;
-hit = 0;
+hit = FALSE;
 row = 0;
 while (row < 4) {
 	column = 0;
@@ -178,11 +184,10 @@ while (row < 4) {
 	while (column < 4) {
 		if (PTT == matrix_array[row][column]) {
 			key = key_array[row][column];
-			if (hit == true) {
-				key = 0;
-				return;
+			if (hit == TRUE) {
+				return 0;
 				}
-			hit = true;
+			hit = TRUE;
 			}
 		column++;
 		}
@@ -195,9 +200,9 @@ return key;
 
 
 
-void keypad_wait()
+void keypad_wait(void)
 {
-PTT = 0x00
+PTT = 0x00;
 while (PTT != 0x0F) {}
 return;
 }
