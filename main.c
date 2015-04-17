@@ -21,10 +21,16 @@ void wait_local(unsigned int n);
 
 #define KEYPAD_MAXBUFFER 50
 
+void keypad_process();
+char keypad_get();
+char keypad_scan();
+void keypad_wait();
+
 enum KeypadStatus {
 	KEYPAD_OFF,
 	KEYPAD_ON
 	}
+
 KeypadStatus keypad_status = KEYPAD_OFF;
 char keypad_buffer[KEYPAD_MAXBUFFER];
 
@@ -55,7 +61,8 @@ unsigned char result_array[4][4];
 
 void wait1000_local(void);
 
-void main(void) {
+void main(void)
+{
 
 DDRP = 0x00;
 PERP = 0x01; // 0001
@@ -100,27 +107,63 @@ if (PIFP & MASK_ON) {
 
 
 
-keypad_process()
+void keypad_process()
 {
+char c;
+unsigned char x;
 
-wait_local(100);
-keypad_get();
-wait_local(100);
-keypad_wait();
-}
+DDRP = 0x00;
+PERP = 0x01; // 0001
+PPSP = 0x01; // 0001
+PIEP = 0x01; // 0001
 
+keypad_buffer[0] = 0;
+x = 0;
+while (1) {
+	wait_local(100);
+	key = keypad_get();
+	if (keypad_status == KEYPAD_OFF) {
+		keypad_buffer[x] = 0;
+		break;
+		}
+	if (key != 0) {
 
-keypad_wait()
-{
-PTT = 0x00
-while (PTT != 0x0F) {}
+//		if (keypad_mode == ?) 	could be added
+
+		keypad_buffer[x] = c;
+		x++;
+		if (x >= KEYPAD_MAXBUFFER) {
+			keypad_buffer[0] = 0; // could be KEYPAD_MAXBUFFER
+			keypad_status = KEYPAD_OFF;
+			break;
+			}
+		}
+	wait_local(100);
+	keypad_wait();
+	}
+
 return;
 }
 
 
+
+
 char keypad_get()
 {
+char key
 
+key = 0;
+while ((key == 0) && (keypad_status == KEYPAD_ON)) {
+	key = keypad_scan();
+	}
+return key;
+}
+
+
+
+
+char keypad_scan()
+{
 unsigned char row, column;
 unsigned char hit;
 char key
@@ -147,8 +190,20 @@ while (row < 4) {
 	}
 
 return key;
-
 }
+
+
+
+
+void keypad_wait()
+{
+PTT = 0x00
+while (PTT != 0x0F) {}
+return;
+}
+
+
+
 
 
 
