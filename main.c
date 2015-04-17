@@ -2,11 +2,10 @@
 #include <mc9s12dt256.h>     /* derivative information */
 
 //#include "pbs12dslk.h"
-//#include "lcd.h"
+#include "lcd.h"
 
 #pragma LINK_INFO DERIVATIVE "mc9s12dt256"
 
-int count = 0;
 
 
 #define MASK_ON 0x01
@@ -14,36 +13,35 @@ int count = 0;
 #define MASK_BIT0_POS1 0x01
 #define MASK_BIT1_POS2 0x02
 #define MASK_BIT2_POS3 0x04
+#define MASK_BIT3_POS4 0x08
 
 void wait_local(unsigned int n);
+void wait1000_local(void);
+
+void lcd_displaystring(char s[]);
 
 
-
+#define TRUE 1
+#define FALSE 0
+#define KEYPAD_ON 1
+#define KEYPAD_OFF 0
 #define KEYPAD_MAXBUFFER 50
 
-void keypad_process(void);
+void keypad_getstring(void);
 char keypad_get(void);
 char keypad_scan(void);
 void keypad_wait(void);
 
+char keypad_status;
+char keypad_buffer[KEYPAD_MAXBUFFER];
 
-#define KEYPAD_ON 1
-#define KEYPAD_OFF 0
-#define TRUE 1
-#define FALSE 0
+
 //enum KeypadStatus {
 //	KEYPAD_OFF,
 //	KEYPAD_ON
 //	}
 //
 //KeypadStatus keypad_status = KEYPAD_OFF;
-char keypad_status;
-char keypad_buffer[KEYPAD_MAXBUFFER];
-
-
-//unsigned char column_array[4] = {
-//	0xE
-//
 //unsigned char row_array[4] = {
 //	0x0E, 0x0D, 0x0B, 0x07
 //	};
@@ -62,10 +60,9 @@ char key_array[4][4] = {
 	{'D', '*', '0', '#'}
 	};
 
-unsigned char result_array[4][4];
+//unsigned char result_array[4][4];
 
 
-void wait1000_local(void);
 
 void main(void)
 {
@@ -81,15 +78,16 @@ PPST = 0x00;
 
 EnableInterrupts;
 
-//LCDInit(void);
-//LCDClearDisplay(void);
+LCDInit();
+LCDClearDisplay();
 
 
 keypad_status = KEYPAD_OFF;
 
 while (1) {
 	if (keypad_status == KEYPAD_ON) {
-		keypad_process();
+		keypad_getstring();
+		lcd_displaystring(keypad_buffer);
 		keypad_status = KEYPAD_OFF;
 		}
 
@@ -103,17 +101,16 @@ while (1) {
 
 void interrupt 56 func_P(void)
 {
-
-if (PIFP & MASK_ON) {
+if (PIFP & MASK_BIT0_POS1) {
 	keypad_status = KEYPAD_ON;
-	PIFP = MASK_ON;
+	PIFP = MASK_BIT0_POS1;
 	}
 }
 
 
 
 
-void keypad_process(void)
+void keypad_getstring(void)
 {
 char key;
 unsigned char x;
@@ -212,7 +209,33 @@ return;
 
 
 
-void wait1000_local(void) {
+void lcd_displaystring(char s[])
+{
+int x;
+
+x = 0;
+while (s[x] != 0) {
+	LCDPutChar(s[x]);
+	x++;
+	}
+
+return;
+}
+
+
+
+
+
+
+void wait_local(unsigned int n)
+{
+for (; n > 0; n--) {}
+return;
+}
+
+
+void wait1000_local(void)
+{
 int i, j;
 for (i = 0; i < 500; i++) {
 	for (j = 0; j < 500; j++) {}
@@ -221,10 +244,5 @@ return;
 }
 
 
-void wait_local(unsigned int n)
-{
-for (; n > 0; n--) {}
-return;
-}
 
 
