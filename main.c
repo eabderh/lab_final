@@ -77,7 +77,7 @@ char buffer[MAXBUFFER];
 
 DDRP = 0x00;
 PERP = 0x01; // 0001
-PPSP = 0x01; // 0001
+PPSP = 0x00; // 0000
 PIEP = 0x01; // 0001
 
 // DDRT = 0x0F;
@@ -260,7 +260,7 @@ return key;
 void keypad_wait(void)
 {
 PTT = 0x00;
-while (PTT != 0x0F) {}
+while (PTT != 0xF0) {}
 return;
 }
 
@@ -312,7 +312,8 @@ unsigned char x;
 i = 0;
 x = 0;
 while (s[x] != '\0') {
-	i = i*10 + (s[x] - '0');
+	i = (i * 10) + (s[x] - '0');
+	x++;
 	}
 
 return i;
